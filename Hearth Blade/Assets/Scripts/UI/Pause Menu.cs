@@ -19,6 +19,7 @@ public class PauseMenu : MonoBehaviour
     {
         Time.timeScale = 0;
         darkPanel.DOFade(1, tweenDuration).SetUpdate(true);
+
         pausePanelRect.anchoredPosition = new Vector2(pausePanelRect.anchoredPosition.x, topPosY);
         pauseMenuPanel.SetActive(true);
         PausePanelIntro();

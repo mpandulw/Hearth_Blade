@@ -1,4 +1,4 @@
-Library: D:\Projects\Game dev\3D\Hearth Blade\Temp\BurstOutput\tempburstlibs\arm64-v8a\lib_burst_generated
+Library: C:\Users\maouz\OneDrive\Documents\GitHub\Hearth_Blade\Hearth Blade\Temp\BurstOutput\tempburstlibs\arm64-v8a\lib_burst_generated
 --platform=Android
 --backend=burst-llvm-18
 --target=ARMV8A_AARCH64
@@ -8,10 +8,10 @@ Library: D:\Projects\Game dev\3D\Hearth Blade\Temp\BurstOutput\tempburstlibs\arm
 --float-precision=Standard
 --target-framework=NetFramework
 --generate-link-xml=Temp\burst.link.xml
---temp-folder=D:\Projects\Game dev\3D\Hearth Blade\Temp\Burst
+--temp-folder=C:\Users\maouz\OneDrive\Documents\GitHub\Hearth_Blade\Hearth Blade\Temp\Burst
 --key-folder=D:/Unity/Hub/Editor/6000.0.42f1/Editor/Data/PlaybackEngines/AndroidPlayer
---decode-folder=D:\Projects\Game dev\3D\Hearth Blade\Library\Burst
---output=D:\Projects\Game dev\3D\Hearth Blade\Temp\BurstOutput\tempburstlibs\arm64-v8a\lib_burst_generated
+--decode-folder=C:\Users\maouz\OneDrive\Documents\GitHub\Hearth_Blade\Hearth Blade\Library\Burst
+--output=C:\Users\maouz\OneDrive\Documents\GitHub\Hearth_Blade\Hearth Blade\Temp\BurstOutput\tempburstlibs\arm64-v8a\lib_burst_generated
 --pdb-search-paths=Temp/ManagedSymbols/
 
 --method=Unity.Burst.BurstCompiler+BurstCompilerHelper, Unity.Burst, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::IsBurstEnabled()--8c2be93e18276203cbd918daa2748a10

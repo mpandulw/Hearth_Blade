@@ -7929,7 +7929,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   movSpeed: 9.25
-  acceleration: 40
+  acceleration: 20
   jumpForce: 10
   layerMask:
     serializedVersion: 2
