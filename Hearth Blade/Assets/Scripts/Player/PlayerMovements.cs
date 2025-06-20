@@ -1,4 +1,5 @@
 using System;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -8,6 +9,7 @@ public class PlayerMovements : MonoBehaviour
     private Animator anim;
     private SpriteRenderer sprite;
     private BoxCollider2D coll;
+    private float horizontal;
 
     // Input system
     private InputSystem_Actions inputActions;
@@ -30,6 +32,23 @@ public class PlayerMovements : MonoBehaviour
 
     // Dust effect
     public ParticleSystem dust;
+
+    // Wallslide mechanic
+    public bool isWallsliding;
+    public float wallslidingSpeed;
+    public float wallslideDuration;
+
+    private bool isWallJumping;
+    private float wallJumpingDirection;
+    private float wallJumpingTime = 0.2f;
+    private float wallJumpingCounter;
+    private float wallJumpingDuration = 0.4f;
+    private Vector2 wallJumpingForce = new(8f, 16f);
+
+    [SerializeField]
+    private Transform wallCheck;
+    [SerializeField]
+    private LayerMask wallLayer;
 
     void Awake()
     {
@@ -67,6 +86,8 @@ public class PlayerMovements : MonoBehaviour
             moveInput = inputActions.Player.Move.ReadValue<Vector2>();
         }
 
+        horizontal = moveInput.x;
+
         float targetSpeed = moveInput.x * movSpeed;
         float newSpeed = Mathf.MoveTowards(rb.linearVelocity.x, targetSpeed, acceleration * Time.deltaTime);
 
@@ -79,6 +100,8 @@ public class PlayerMovements : MonoBehaviour
         }
 
         UpdateAnimation();
+
+        Wallslide();
     }
 
     private enum MovementState { idle, run, jump, fall }
@@ -161,5 +184,23 @@ public class PlayerMovements : MonoBehaviour
     public bool isGrounded()
     {
         return Physics2D.BoxCast(coll.bounds.center, coll.bounds.size, 0f, Vector2.down, 0.1f, layerMask);
+    }
+
+
+    private bool IsWalled()
+    {
+        return Physics2D.OverlapCircle(wallCheck.position, 0.2f, wallLayer);
+    }
+    private void Wallslide()
+    {
+        if (IsWalled() && !isGrounded() && horizontal != 0f)
+        {
+            isWallsliding = true;
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, Mathf.Clamp(rb.linearVelocity.y, -wallslidingSpeed, float.MaxValue));
+        }
+        else
+        {
+            isWallsliding = false;
+        }
     }
 }
