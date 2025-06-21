@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -30,16 +31,24 @@ public class PlayerMovements : MonoBehaviour
     public float wallslidingSpeed;
     public float wallSlideDuration = 0.5f;
     public float wallSlideCounter;
+    [SerializeField] private Transform wallCheck;
+    [SerializeField] private LayerMask wallLayer;
+
+    [Header("Dash")]
+    public float dashPower = 24f;
+    [SerializeField] private bool isDashing;
 
     private bool isWallJumping;
     private float wallJumpingDirection;
     private float wallJumpingTime = 0.2f;
     private float wallJumpingCounter;
     private float wallJumpingDuration = 0.4f;
-    private Vector2 wallJumpingForce = new(4f, 6f);
+    private Vector2 wallJumpingForce = new(8f, 8f);
+    private bool canDash = true;
+    private float dashTime = 0.2f;
+    private float dashCooldown = 1f;
+    private TrailRenderer tr;
 
-    [SerializeField] private Transform wallCheck;
-    [SerializeField] private LayerMask wallLayer;
 
     private Vector3 wallCheckInitialLocalPosition;
     private bool isFacingRight = true;
@@ -47,11 +56,13 @@ public class PlayerMovements : MonoBehaviour
     void Awake()
     {
         inputActions = new InputSystem_Actions();
+
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         sprite = GetComponent<SpriteRenderer>();
         coll = GetComponent<BoxCollider2D>();
         wallCheckInitialLocalPosition = wallCheck.localPosition;
+        tr = GetComponent<TrailRenderer>();
     }
 
     void OnEnable()
@@ -60,10 +71,16 @@ public class PlayerMovements : MonoBehaviour
         inputActions.Player.Move.performed += OnMove;
         inputActions.Player.Move.canceled += OnMoveCancel;
         inputActions.Player.Jump.performed += OnJump;
+        inputActions.Player.Dash.performed += OnDash;
     }
 
     void Update()
     {
+        if (isDashing)
+        {
+            return;
+        }
+
         if (Application.isMobilePlatform)
         {
             moveInput = new Vector2(mobileMoveInputX, 0f);
@@ -89,7 +106,10 @@ public class PlayerMovements : MonoBehaviour
         WallJump();
     }
 
-    private enum MovementState { idle, run, jump, fall, wallSliding }
+    private enum MovementState
+    {
+        idle, run, jump, fall, wallSliding, dash
+    }
 
     private void UpdateAnimation()
     {
@@ -145,6 +165,11 @@ public class PlayerMovements : MonoBehaviour
 
         }
 
+        if (isDashing)
+        {
+            state = MovementState.dash;
+        }
+
         anim.SetInteger("state", (int)state);
     }
 
@@ -182,6 +207,12 @@ public class PlayerMovements : MonoBehaviour
     private void OnMove(InputAction.CallbackContext context) => moveInput = context.ReadValue<Vector2>();
     private void OnMoveCancel(InputAction.CallbackContext context) => moveInput = Vector2.zero;
     private void OnJump(InputAction.CallbackContext context) => DoJump();
+    private void OnDash(InputAction.CallbackContext context) => DoDash();
+
+    public void MobileDash()
+    {
+        DoDash();
+    }
 
     public void mobileMoveLeft(bool pressed)
     {
@@ -251,5 +282,36 @@ public class PlayerMovements : MonoBehaviour
         }
     }
 
+    private void DoDash()
+    {
+        if (canDash && !isDashing)
+        {
+            StartCoroutine(Dash());
+        }
+    }
 
+    private IEnumerator Dash()
+    {
+        anim.SetInteger("state", (int)MovementState.dash);
+        canDash = false;
+        isDashing = true;
+        float originalGravity = rb.gravityScale;
+        rb.gravityScale = 0;
+        if (isFacingRight)
+        {
+            rb.linearVelocity = new Vector2(transform.localScale.x * dashPower, 0f);
+        }
+        else if (!isFacingRight)
+        {
+            rb.linearVelocity = new Vector2(-transform.localScale.x * dashPower, 0f);
+        }
+        tr.emitting = true;
+        yield return new WaitForSeconds(dashTime);
+        tr.emitting = false;
+        rb.gravityScale = originalGravity;
+        isDashing = false;
+        anim.SetBool("dash", false);
+        yield return new WaitForSeconds(dashCooldown);
+        canDash = true;
+    }
 }
