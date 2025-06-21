@@ -1,5 +1,4 @@
 using System;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -11,44 +10,39 @@ public class PlayerMovements : MonoBehaviour
     private BoxCollider2D coll;
     private float horizontal;
 
-    // Input system
     private InputSystem_Actions inputActions;
-
-    // Move Input
     private Vector2 moveInput;
     private float mobileMoveInputX;
 
-    // Movements Settings
     [Header("Movements Setting")]
     public float movSpeed;
     public float acceleration = 40f;
 
-    // Jump Settings
     [Header("Jump Settings")]
     public float jumpForce;
     [SerializeField] private LayerMask layerMask;
 
     public bool isJumping = false;
-
-    // Dust effect
     public ParticleSystem dust;
 
-    // Wallslide mechanic
+    [Header("Wallslide")]
     public bool isWallsliding;
     public float wallslidingSpeed;
-    public float wallslideDuration;
+    public float wallSlideDuration = 0.5f;
+    public float wallSlideCounter;
 
     private bool isWallJumping;
     private float wallJumpingDirection;
     private float wallJumpingTime = 0.2f;
     private float wallJumpingCounter;
     private float wallJumpingDuration = 0.4f;
-    private Vector2 wallJumpingForce = new(8f, 16f);
+    private Vector2 wallJumpingForce = new(4f, 6f);
 
-    [SerializeField]
-    private Transform wallCheck;
-    [SerializeField]
-    private LayerMask wallLayer;
+    [SerializeField] private Transform wallCheck;
+    [SerializeField] private LayerMask wallLayer;
+
+    private Vector3 wallCheckInitialLocalPosition;
+    private bool isFacingRight = true;
 
     void Awake()
     {
@@ -57,6 +51,7 @@ public class PlayerMovements : MonoBehaviour
         anim = GetComponent<Animator>();
         sprite = GetComponent<SpriteRenderer>();
         coll = GetComponent<BoxCollider2D>();
+        wallCheckInitialLocalPosition = wallCheck.localPosition;
     }
 
     void OnEnable()
@@ -67,16 +62,8 @@ public class PlayerMovements : MonoBehaviour
         inputActions.Player.Jump.performed += OnJump;
     }
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
     void Update()
     {
-        // Check input
         if (Application.isMobilePlatform)
         {
             moveInput = new Vector2(mobileMoveInputX, 0f);
@@ -88,11 +75,9 @@ public class PlayerMovements : MonoBehaviour
 
         horizontal = moveInput.x;
 
-        float targetSpeed = moveInput.x * movSpeed;
+        float targetSpeed = horizontal * movSpeed;
         float newSpeed = Mathf.MoveTowards(rb.linearVelocity.x, targetSpeed, acceleration * Time.deltaTime);
-
-        Vector2 newVelocity = new Vector2(newSpeed, rb.linearVelocity.y);
-        rb.linearVelocity = newVelocity;
+        rb.linearVelocity = new Vector2(newSpeed, rb.linearVelocity.y);
 
         if (isGrounded() && Mathf.Abs(rb.linearVelocity.y) < 0.1f)
         {
@@ -100,33 +85,33 @@ public class PlayerMovements : MonoBehaviour
         }
 
         UpdateAnimation();
-
         Wallslide();
+        WallJump();
     }
 
-    private enum MovementState { idle, run, jump, fall }
+    private enum MovementState { idle, run, jump, fall, wallSliding }
+
     private void UpdateAnimation()
     {
         MovementState state;
-        // Run state
+
         if (rb.linearVelocity.x > 0f)
         {
+            isFacingRight = true;
             state = MovementState.run;
             sprite.flipX = false;
-            if (!isJumping)
-            {
-                if (!dust.isPlaying) dust.Play();
 
-            }
+            if (!isJumping && !dust.isPlaying)
+                dust.Play();
         }
         else if (rb.linearVelocity.x < 0f)
         {
+            isFacingRight = false;
             state = MovementState.run;
             sprite.flipX = true;
-            if (!isJumping)
-            {
-                if (!dust.isPlaying) dust.Play();
-            }
+
+            if (!isJumping && !dust.isPlaying)
+                dust.Play();
         }
         else
         {
@@ -134,7 +119,13 @@ public class PlayerMovements : MonoBehaviour
             if (dust.isPlaying) dust.Stop();
         }
 
-        // Jump State
+        // Flip wallCheck position based on facing
+        wallCheck.localPosition = new Vector3(
+            isFacingRight ? Mathf.Abs(wallCheckInitialLocalPosition.x) : -Mathf.Abs(wallCheckInitialLocalPosition.x),
+            wallCheckInitialLocalPosition.y,
+            wallCheckInitialLocalPosition.z
+        );
+
         if (rb.linearVelocity.y > 0.1f)
         {
             state = MovementState.jump;
@@ -144,19 +135,53 @@ public class PlayerMovements : MonoBehaviour
             state = MovementState.fall;
         }
 
+        if (isWallsliding)
+        {
+            if (isWallsliding)
+            {
+                sprite.flipX = isFacingRight;
+                state = MovementState.wallSliding;
+            }
+
+        }
+
         anim.SetInteger("state", (int)state);
+    }
+
+    private void DoJump()
+    {
+        if (isGrounded())
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+            isJumping = true;
+        }
+        else if (wallJumpingCounter > 0f)
+        {
+            isWallJumping = true;
+            rb.linearVelocity = new Vector2(wallJumpingDirection * wallJumpingForce.x, wallJumpingForce.y);
+            wallJumpingCounter = 0;
+
+            isFacingRight = !isFacingRight;
+            sprite.flipX = !sprite.flipX;
+
+            wallCheck.localPosition = new Vector3(
+                isFacingRight ? Mathf.Abs(wallCheckInitialLocalPosition.x) : -Mathf.Abs(wallCheckInitialLocalPosition.x),
+                wallCheckInitialLocalPosition.y,
+                wallCheckInitialLocalPosition.z
+            );
+
+            Invoke(nameof(StopWallJumping), wallJumpingDuration);
+        }
+    }
+
+    private void StopWallJumping()
+    {
+        isWallJumping = false;
     }
 
     private void OnMove(InputAction.CallbackContext context) => moveInput = context.ReadValue<Vector2>();
     private void OnMoveCancel(InputAction.CallbackContext context) => moveInput = Vector2.zero;
-    private void OnJump(InputAction.CallbackContext context)
-    {
-        if (isGrounded())
-        {
-            isJumping = true;
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
-        }
-    }
+    private void OnJump(InputAction.CallbackContext context) => DoJump();
 
     public void mobileMoveLeft(bool pressed)
     {
@@ -165,6 +190,7 @@ public class PlayerMovements : MonoBehaviour
         else if (mobileMoveInputX == -1f)
             mobileMoveInputX = 0f;
     }
+
     public void mobileMoveRight(bool pressed)
     {
         if (pressed)
@@ -172,13 +198,10 @@ public class PlayerMovements : MonoBehaviour
         else if (mobileMoveInputX == 1f)
             mobileMoveInputX = 0f;
     }
+
     public void mobileJump()
     {
-        if (isGrounded())
-        {
-            isJumping = true;
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
-        }
+        DoJump();
     }
 
     public bool isGrounded()
@@ -186,21 +209,47 @@ public class PlayerMovements : MonoBehaviour
         return Physics2D.BoxCast(coll.bounds.center, coll.bounds.size, 0f, Vector2.down, 0.1f, layerMask);
     }
 
+    private void WallJump()
+    {
+        if (isWallsliding)
+        {
+            isWallJumping = false;
+            wallJumpingDirection = isFacingRight ? -1 : 1;
+            wallJumpingCounter = wallJumpingTime;
+            CancelInvoke(nameof(StopWallJumping));
+        }
+        else
+        {
+            wallJumpingCounter -= Time.deltaTime;
+        }
+    }
 
     private bool IsWalled()
     {
         return Physics2D.OverlapCircle(wallCheck.position, 0.2f, wallLayer);
     }
+
     private void Wallslide()
     {
-        if (IsWalled() && !isGrounded() && horizontal != 0f)
+        if (IsWalled() && !isGrounded() && horizontal != 0f && wallSlideCounter >= 0)
         {
             isWallsliding = true;
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, Mathf.Clamp(rb.linearVelocity.y, -wallslidingSpeed, float.MaxValue));
+            wallSlideCounter -= Time.deltaTime;
         }
         else
         {
             isWallsliding = false;
+            if (isWallJumping)
+            {
+                wallSlideCounter = wallSlideDuration;
+            }
+            else if (isGrounded())
+            {
+                wallSlideCounter = wallSlideDuration;
+            }
         }
     }
+
+
 }
