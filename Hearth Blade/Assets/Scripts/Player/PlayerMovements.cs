@@ -29,7 +29,12 @@ public class PlayerMovements : MonoBehaviour
     public float maxStamina;
     public float staminaNeeded;
     public Slider staminaBar;
+    public float regenStamina = 10f;
+    public float recoveryDelayAfterDash = 2f;
+    private float lastDashTime;
     private float staminaVelocity;
+    private bool isRecovering;
+
 
     public bool isJumping = false;
     public ParticleSystem dust;
@@ -111,6 +116,14 @@ public class PlayerMovements : MonoBehaviour
             isJumping = false;
         }
 
+        if (!isDashing && !isRecovering && currentStamina < maxStamina)
+        {
+            if (Time.time - lastDashTime >= recoveryDelayAfterDash)
+            {
+                StartCoroutine(recoveryStamina());
+            }
+        }
+
         UpdateAnimation();
         Wallslide();
         WallJump();
@@ -185,11 +198,6 @@ public class PlayerMovements : MonoBehaviour
         if (isDashing)
         {
             state = MovementState.dash;
-        }
-
-        if (!isDashing)
-        {
-            StartCoroutine(recoveryStamina());
         }
 
         anim.SetInteger("state", (int)state);
@@ -337,6 +345,7 @@ public class PlayerMovements : MonoBehaviour
             tr.emitting = false;
             rb.gravityScale = originalGravity;
             isDashing = false;
+            lastDashTime = Time.time;
             yield return new WaitForSeconds(dashCooldown);
             canDash = true;
         }
@@ -344,10 +353,27 @@ public class PlayerMovements : MonoBehaviour
 
     private IEnumerator recoveryStamina()
     {
+        isRecovering = true;
+
         while (currentStamina < maxStamina)
         {
-            yield return new WaitForSeconds(1f);
-            currentStamina++;
+            // Jika player melakukan dash lagi saat recovery, restart delay
+            if (Time.time - lastDashTime < recoveryDelayAfterDash)
+            {
+                yield return new WaitForSeconds(recoveryDelayAfterDash - (Time.time - lastDashTime));
+            }
+
+            // Tetap cek jika dash dilakukan lagi selama loop
+            if (Time.time - lastDashTime < recoveryDelayAfterDash)
+            {
+                continue;
+            }
+
+            currentStamina += regenStamina * Time.deltaTime;
+            currentStamina = Mathf.Min(currentStamina, maxStamina);
+            yield return null;
         }
+
+        isRecovering = false;
     }
 }
