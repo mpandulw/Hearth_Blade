@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class PlayerMovements : MonoBehaviour
 {
@@ -22,6 +23,13 @@ public class PlayerMovements : MonoBehaviour
     [Header("Jump Settings")]
     public float jumpForce;
     [SerializeField] private LayerMask layerMask;
+
+    [Header("Player Stamina")]
+    public float currentStamina;
+    public float maxStamina;
+    public float staminaNeeded;
+    public Slider staminaBar;
+    private float staminaVelocity;
 
     public bool isJumping = false;
     public ParticleSystem dust;
@@ -76,6 +84,8 @@ public class PlayerMovements : MonoBehaviour
 
     void Update()
     {
+        staminaBar.value = Mathf.SmoothDamp(staminaBar.value, currentStamina, ref staminaVelocity, 0.1f);
+
         if (isDashing)
         {
             return;
@@ -104,6 +114,13 @@ public class PlayerMovements : MonoBehaviour
         UpdateAnimation();
         Wallslide();
         WallJump();
+    }
+
+    void Start()
+    {
+        currentStamina = maxStamina;
+        staminaBar.maxValue = maxStamina;
+        staminaBar.value = currentStamina;
     }
 
     private enum MovementState
@@ -168,6 +185,11 @@ public class PlayerMovements : MonoBehaviour
         if (isDashing)
         {
             state = MovementState.dash;
+        }
+
+        if (!isDashing)
+        {
+            StartCoroutine(recoveryStamina());
         }
 
         anim.SetInteger("state", (int)state);
@@ -292,26 +314,40 @@ public class PlayerMovements : MonoBehaviour
 
     private IEnumerator Dash()
     {
-        anim.SetInteger("state", (int)MovementState.dash);
-        canDash = false;
-        isDashing = true;
-        float originalGravity = rb.gravityScale;
-        rb.gravityScale = 0;
-        if (isFacingRight)
+        if (currentStamina >= staminaNeeded)
         {
-            rb.linearVelocity = new Vector2(transform.localScale.x * dashPower, 0f);
+            currentStamina -= staminaNeeded;
+            currentStamina = Mathf.Clamp(currentStamina, 0, maxStamina);
+
+            anim.SetInteger("state", (int)MovementState.dash);
+            canDash = false;
+            isDashing = true;
+            float originalGravity = rb.gravityScale;
+            rb.gravityScale = 0;
+            if (isFacingRight)
+            {
+                rb.linearVelocity = new Vector2(transform.localScale.x * dashPower, 0f);
+            }
+            else if (!isFacingRight)
+            {
+                rb.linearVelocity = new Vector2(-transform.localScale.x * dashPower, 0f);
+            }
+            tr.emitting = true;
+            yield return new WaitForSeconds(dashTime);
+            tr.emitting = false;
+            rb.gravityScale = originalGravity;
+            isDashing = false;
+            yield return new WaitForSeconds(dashCooldown);
+            canDash = true;
         }
-        else if (!isFacingRight)
+    }
+
+    private IEnumerator recoveryStamina()
+    {
+        while (currentStamina < maxStamina)
         {
-            rb.linearVelocity = new Vector2(-transform.localScale.x * dashPower, 0f);
+            yield return new WaitForSeconds(1f);
+            currentStamina++;
         }
-        tr.emitting = true;
-        yield return new WaitForSeconds(dashTime);
-        tr.emitting = false;
-        rb.gravityScale = originalGravity;
-        isDashing = false;
-        anim.SetBool("dash", false);
-        yield return new WaitForSeconds(dashCooldown);
-        canDash = true;
     }
 }
