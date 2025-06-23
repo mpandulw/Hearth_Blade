@@ -9806,8 +9806,8 @@ GameObject:
   - component: {fileID: 1143064412}
   - component: {fileID: 1143064411}
   - component: {fileID: 1143064410}
-  - component: {fileID: 1143064409}
   - component: {fileID: 1143064408}
+  - component: {fileID: 1143064409}
   - component: {fileID: 1143064413}
   - component: {fileID: 1143064415}
   - component: {fileID: 1143064414}

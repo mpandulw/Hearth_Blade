@@ -87,6 +87,15 @@ public class PlayerMovements : MonoBehaviour
         inputActions.Player.Dash.performed += OnDash;
     }
 
+    void OnDisable()
+    {
+        inputActions.Player.Move.performed -= OnMove;
+        inputActions.Player.Move.canceled -= OnMoveCancel;
+        inputActions.Player.Jump.performed -= OnJump;
+        inputActions.Player.Dash.performed -= OnDash;
+        inputActions.Disable();
+    }
+
     void Update()
     {
         staminaBar.value = Mathf.SmoothDamp(staminaBar.value, currentStamina, ref staminaVelocity, 0.1f);
@@ -134,6 +143,8 @@ public class PlayerMovements : MonoBehaviour
         currentStamina = maxStamina;
         staminaBar.maxValue = maxStamina;
         staminaBar.value = currentStamina;
+
+        Time.timeScale = 1;
     }
 
     private enum MovementState
