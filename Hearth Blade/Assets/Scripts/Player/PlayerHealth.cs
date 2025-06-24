@@ -1,14 +1,31 @@
 using System.Collections;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class PlayerHealth : MonoBehaviour
 {
+    private PlayerMovements playerMovements;
+    private Animator anim;
+
+    [Header("Health")]
     public float currentHealth;
     public float maxHealth;
     public Slider hpBar;
 
+    [Header("Dead Panel")]
+    [SerializeField] private GameObject deadPanelGameObject;
+    [SerializeField] private CanvasGroup deadPanel;
+    [SerializeField] private float tweenDuration;
+
+
     private float currentVelocity = 0;
+
+    void Awake()
+    {
+        playerMovements = GetComponent<PlayerMovements>();
+        anim = GetComponent<Animator>();
+    }
 
     void Start()
     {
@@ -27,6 +44,7 @@ public class PlayerHealth : MonoBehaviour
     {
         currentHealth -= amount;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+        anim.SetTrigger("isHit");
 
         if (currentHealth <= 0)
         {
@@ -36,12 +54,19 @@ public class PlayerHealth : MonoBehaviour
 
     private void Die()
     {
-        StartCoroutine(DieCoroutine());
+        deadPanelGameObject.SetActive(true);
+        deadPanel.DOFade(1, tweenDuration).SetUpdate(true);
+        anim.SetBool("isDead", true);
+        playerMovements.enabled = false;
     }
 
-    private IEnumerator DieCoroutine()
+    void OnTriggerEnter2D(Collider2D collision)
     {
-        yield return new WaitForSeconds(0.1f);
-        Destroy(gameObject);
+        if (collision.gameObject.CompareTag("Death"))
+        {
+            Debug.Log("Death");
+            currentHealth = 0;
+            Die();
+        }
     }
 }
