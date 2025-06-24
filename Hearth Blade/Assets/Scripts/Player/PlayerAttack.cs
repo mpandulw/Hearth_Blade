@@ -3,56 +3,86 @@ using UnityEngine;
 
 public class PlayerAttack : MonoBehaviour
 {
-    private PlayerMovements mov;
+    private PlayerMovements playerMovements;
     private Animator anim;
     private Rigidbody2D rb;
 
-    // Attack var
     private bool isAttacking = false;
-    public float attDuration = 3f;
-    public int attDamage = 1;
-    private enum AttackType { Attack1, Attack2 }
+    public float attackDuration = 3f;
+    public float attackDamage = 25;
 
     public GameObject attackPos;
     public float rad;
     public LayerMask enemies;
 
-    // Getter and setter variable isAttacking
     public bool IsAttacking => isAttacking;
 
     void Awake()
     {
-        mov = GetComponent<PlayerMovements>();
+        playerMovements = GetComponent<PlayerMovements>();
         anim = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
     }
 
-    public void DoAttack1()
+    public void DoAttack()
     {
-        if (mov.isGrounded() && !mov.isJumping && isAttacking != true)
+        if (playerMovements.isGrounded() && !playerMovements.isJumping && !isAttacking)
         {
             isAttacking = true;
             anim.SetBool("isAttacking", true);
-            Collider2D[] enemy = Physics2D.OverlapCircleAll(attackPos.transform.position, rad, enemies);
+
+            // Hitung posisi serangan berdasarkan arah hadap
+            Vector3 adjustedAttackPos = attackPos.transform.position;
+
+            if (!playerMovements.IsFacingRight)
+            {
+                float offsetX = attackPos.transform.localPosition.x * 2;
+                adjustedAttackPos.x -= offsetX;
+            }
+
+            Collider2D[] enemy = Physics2D.OverlapCircleAll(adjustedAttackPos, rad, enemies);
 
             foreach (Collider2D enemyGameObject in enemy)
             {
                 Debug.Log("Hit");
-                // enemyGameObject.GetComponent<EnemyHealth>().TakeDamage(attDamage);
+                enemyGameObject.GetComponent<EnemyHealth>().TakeDamage(attackDamage);
             }
+
             rb.linearVelocity = Vector2.zero;
 
-            Invoke(nameof(EndAttack), attDuration);
+            Invoke(nameof(endAttackBool), attackDuration);
         }
     }
 
     private void EndAttack()
+    {
+        anim.SetBool("isAttacking", false);
+    }
+
+    private void endAttackBool()
     {
         isAttacking = false;
     }
 
     void OnDrawGizmos()
     {
-        Gizmos.DrawWireSphere(attackPos.transform.position, rad);
+#if UNITY_EDITOR
+        if (attackPos == null) return;
+
+        // Ambil PlayerMovements untuk cek arah
+        PlayerMovements playerMovements = GetComponent<PlayerMovements>();
+        Vector3 drawPos = attackPos.transform.position;
+
+        // Jika menghadap kiri, geser posisinya ke kiri
+        if (!playerMovements.IsFacingRight)
+        {
+            float offsetX = (attackPos.transform.localPosition.x * 2);
+            drawPos.x -= offsetX;
+        }
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(drawPos, rad);
+#endif
     }
+
 }

@@ -11,6 +11,7 @@ public class PlayerMovements : MonoBehaviour
     private SpriteRenderer sprite;
     private BoxCollider2D coll;
     private float horizontal;
+    private PlayerAttack playerAttack;
 
     private InputSystem_Actions inputActions;
     private Vector2 moveInput;
@@ -51,6 +52,12 @@ public class PlayerMovements : MonoBehaviour
     public float dashPower = 24f;
     [SerializeField] private bool isDashing;
 
+    [Header("Knockback")]
+    public float knockbackForce;
+    public float knockbackCounter;
+    public float knockbackTotalTime;
+    public bool knockbackFromRight;
+
     private bool isWallJumping;
     private float wallJumpingDirection;
     private float wallJumpingTime = 0.2f;
@@ -62,9 +69,9 @@ public class PlayerMovements : MonoBehaviour
     private float dashCooldown = 1f;
     private TrailRenderer tr;
 
-
     private Vector3 wallCheckInitialLocalPosition;
     private bool isFacingRight = true;
+    public bool IsFacingRight => isFacingRight;
 
     void Awake()
     {
@@ -76,6 +83,7 @@ public class PlayerMovements : MonoBehaviour
         coll = GetComponent<BoxCollider2D>();
         wallCheckInitialLocalPosition = wallCheck.localPosition;
         tr = GetComponent<TrailRenderer>();
+        playerAttack = GetComponent<PlayerAttack>();
     }
 
     void OnEnable()
@@ -85,6 +93,7 @@ public class PlayerMovements : MonoBehaviour
         inputActions.Player.Move.canceled += OnMoveCancel;
         inputActions.Player.Jump.performed += OnJump;
         inputActions.Player.Dash.performed += OnDash;
+        inputActions.Player.Attack.performed += OnAttack;
     }
 
     void OnDisable()
@@ -93,6 +102,7 @@ public class PlayerMovements : MonoBehaviour
         inputActions.Player.Move.canceled -= OnMoveCancel;
         inputActions.Player.Jump.performed -= OnJump;
         inputActions.Player.Dash.performed -= OnDash;
+        inputActions.Player.Attack.performed -= OnAttack;
         inputActions.Disable();
     }
 
@@ -131,6 +141,23 @@ public class PlayerMovements : MonoBehaviour
             {
                 StartCoroutine(recoveryStamina());
             }
+        }
+
+        if (!playerAttack.IsAttacking)
+        {
+            if (knockbackCounter > 0)
+            {
+                if (knockbackFromRight == true)
+                {
+                    rb.linearVelocity = new Vector2(-knockbackForce, 1);
+                }
+                if (knockbackFromRight == false)
+                {
+                    rb.linearVelocity = new Vector2(knockbackForce, 1);
+                }
+                knockbackCounter -= Time.deltaTime;
+            }
+
         }
 
         UpdateAnimation();
@@ -249,7 +276,7 @@ public class PlayerMovements : MonoBehaviour
     private void OnMoveCancel(InputAction.CallbackContext context) => moveInput = Vector2.zero;
     private void OnJump(InputAction.CallbackContext context) => DoJump();
     private void OnDash(InputAction.CallbackContext context) => DoDash();
-
+    private void OnAttack(InputAction.CallbackContext context) => playerAttack.DoAttack();
     public void MobileDash()
     {
         DoDash();

@@ -18,6 +18,9 @@ public class PlayerHealth : MonoBehaviour
     [SerializeField] private CanvasGroup deadPanel;
     [SerializeField] private float tweenDuration;
 
+    [Header("Checkpoint")]
+    [SerializeField] private GameObject buttonInteract;
+    [SerializeField] private GameObject buttonTalk;
 
     private float currentVelocity = 0;
 
@@ -68,5 +71,34 @@ public class PlayerHealth : MonoBehaviour
             currentHealth = 0;
             Die();
         }
+    }
+
+    void OnTriggerStay2D(Collider2D collision)
+    {
+        if (collision.gameObject.CompareTag("Checkpoint"))
+        {
+            buttonInteract.SetActive(true);
+        }
+        else if (collision.gameObject.CompareTag("Shop"))
+        {
+            buttonTalk.SetActive(true);
+        }
+    }
+
+    void OnTriggerExit2D(Collider2D collision)
+    {
+        if (collision.gameObject.CompareTag("Checkpoint"))
+        {
+            buttonInteract.SetActive(false);
+        }
+        else if (collision.gameObject.CompareTag("Shop"))
+        {
+            buttonTalk.SetActive(false);
+        }
+    }
+
+    public void Checkpoint()
+    {
+        currentHealth = maxHealth;
     }
 }
