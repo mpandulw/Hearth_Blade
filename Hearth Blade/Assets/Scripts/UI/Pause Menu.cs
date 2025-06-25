@@ -31,7 +31,6 @@ public class PauseMenu : MonoBehaviour
         darkPanel.DOFade(0, tweenDuration).SetUpdate(true);
         await PausePanelOutro();
         pauseMenuPanel.SetActive(false);
-
     }
 
     public void ToMainMenu()
