@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Tutorials : MonoBehaviour
 {
@@ -18,17 +19,24 @@ public class Tutorials : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        Invoke(nameof(showMoveTutorial), 0.05f);
+        if (SceneManager.GetActiveScene().name == "Tutorial")
+        {
+            Invoke(nameof(showMoveTutorial), 0.05f);
+        }
     }
 
     private void showMoveTutorial()
     {
-        Time.timeScale = 0;
-        darkPanel.DOFade(1, tweenDuration).SetUpdate(true);
-        tutorialObj.SetActive(true);
-        moveTutorialRectTransform.anchoredPosition = new Vector2(moveTutorialRectTransform.anchoredPosition.x, topPosY);
-        moveTutorialPanel.SetActive(true);
-        MoveTutorialIntro();
+        if (PlayerPrefs.GetString("move_tutorial") != "done")
+        {
+            Time.timeScale = 0;
+            darkPanel.DOFade(1, tweenDuration).SetUpdate(true);
+            tutorialObj.SetActive(true);
+            moveTutorialRectTransform.anchoredPosition = new Vector2(moveTutorialRectTransform.anchoredPosition.x, topPosY);
+            moveTutorialPanel.SetActive(true);
+            MoveTutorialIntro();
+            PlayerPrefs.SetString("move_tutorial", "done");
+        }
     }
 
     public async void CloseMoveTutorial()

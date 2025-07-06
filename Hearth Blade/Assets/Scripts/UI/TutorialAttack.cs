@@ -17,12 +17,16 @@ public class TutorialAttack : MonoBehaviour
 
     private void showTutorial()
     {
-        Time.timeScale = 0;
-        darkPanel.DOFade(1, tweenDuration).SetUpdate(true);
-        tutorialObj.SetActive(true);
-        tutorialRectTransform.anchoredPosition = new Vector2(tutorialRectTransform.anchoredPosition.x, topPosY);
-        tutorialPanel.SetActive(true);
-        TutorialIntro();
+        if (PlayerPrefs.GetString("checkpoint_tutorial") != "done")
+        {
+            Time.timeScale = 0;
+            darkPanel.DOFade(1, tweenDuration).SetUpdate(true);
+            tutorialObj.SetActive(true);
+            tutorialRectTransform.anchoredPosition = new Vector2(tutorialRectTransform.anchoredPosition.x, topPosY);
+            tutorialPanel.SetActive(true);
+            TutorialIntro();
+            PlayerPrefs.SetString("attack_tutorial", "done");
+        }
     }
 
     public async void CloseTutorial()

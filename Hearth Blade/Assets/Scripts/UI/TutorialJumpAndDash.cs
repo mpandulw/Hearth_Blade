@@ -17,12 +17,16 @@ public class TutorialJumpAndDash : MonoBehaviour
 
     private void showTutorial()
     {
-        Time.timeScale = 0;
-        darkPanel.DOFade(1, tweenDuration).SetUpdate(true);
-        tutorialObj.SetActive(true);
-        tutorialRectTransform.anchoredPosition = new Vector2(tutorialRectTransform.anchoredPosition.x, topPosY);
-        tutorialPanel.SetActive(true);
-        TutorialIntro();
+        if (PlayerPrefs.GetString("jump_and_dash_tutorial") != "done")
+        {
+            Time.timeScale = 0;
+            darkPanel.DOFade(1, tweenDuration).SetUpdate(true);
+            tutorialObj.SetActive(true);
+            tutorialRectTransform.anchoredPosition = new Vector2(tutorialRectTransform.anchoredPosition.x, topPosY);
+            tutorialPanel.SetActive(true);
+            TutorialIntro();
+            PlayerPrefs.SetString("jump_and_dash_tutorial", "done");
+        }
     }
 
     public async void CloseTutorial()

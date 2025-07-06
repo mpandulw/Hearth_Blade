@@ -44,7 +44,7 @@ public class MainMenu : MonoBehaviour
 
     public void StartButton()
     {
-        SceneManager.LoadScene("Tutorial");
+        SceneManager.LoadScene("Level1");
     }
 
     public void QuitButton()

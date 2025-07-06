@@ -1,10 +1,12 @@
 using System.Collections;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class PlayerHealth : MonoBehaviour
 {
+    private DiedMenu diedMenu;
     private PlayerMovements playerMovements;
     private Animator anim;
 
@@ -20,7 +22,7 @@ public class PlayerHealth : MonoBehaviour
 
     [Header("Checkpoint")]
     [SerializeField] private GameObject buttonInteract;
-    [SerializeField] private GameObject buttonTalk;
+    [SerializeField] private GameObject checkpointPos;
 
     private float currentVelocity = 0;
 
@@ -28,6 +30,7 @@ public class PlayerHealth : MonoBehaviour
     {
         playerMovements = GetComponent<PlayerMovements>();
         anim = GetComponent<Animator>();
+        diedMenu = FindAnyObjectByType<DiedMenu>();
     }
 
     void Start()
@@ -35,6 +38,21 @@ public class PlayerHealth : MonoBehaviour
         currentHealth = maxHealth;
         hpBar.maxValue = maxHealth;
         hpBar.value = currentHealth;
+
+        if (PlayerPrefs.GetInt("ShouldRespawn", 0) == 1)
+        {
+            Vector2 checkpointPos = new Vector2(
+                PlayerPrefs.GetFloat("checkpointPosX"),
+                PlayerPrefs.GetFloat("checkpointPosY")
+            );
+
+            transform.position = checkpointPos;
+            currentHealth = maxHealth;
+            anim.SetBool("isDead", false);
+            playerMovements.enabled = true;
+
+            PlayerPrefs.SetInt("ShouldRespawn", 0);
+        }
     }
 
     // Update is called once per frame
@@ -79,10 +97,6 @@ public class PlayerHealth : MonoBehaviour
         {
             buttonInteract.SetActive(true);
         }
-        else if (collision.gameObject.CompareTag("Shop"))
-        {
-            buttonTalk.SetActive(true);
-        }
     }
 
     void OnTriggerExit2D(Collider2D collision)
@@ -91,14 +105,20 @@ public class PlayerHealth : MonoBehaviour
         {
             buttonInteract.SetActive(false);
         }
-        else if (collision.gameObject.CompareTag("Shop"))
-        {
-            buttonTalk.SetActive(false);
-        }
     }
 
     public void Checkpoint()
     {
         currentHealth = maxHealth;
+        SaveCheckpoint(checkpointPos.transform.position, SceneManager.GetActiveScene().name);
+        diedMenu.startPoint = (Vector2)checkpointPos.transform.position;
+        Debug.Log(diedMenu.startPoint);
+    }
+
+    private void SaveCheckpoint(Vector2 checkpointPos, string sceneName)
+    {
+        PlayerPrefs.SetFloat("checkpointPosX", checkpointPos.x);
+        PlayerPrefs.SetFloat("checkpointPosY", checkpointPos.y);
+        PlayerPrefs.SetString("scene", sceneName);
     }
 }
