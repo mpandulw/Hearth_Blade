@@ -13,6 +13,7 @@ public class PauseMenu : MonoBehaviour
     [SerializeField] private float topPosY, middlePosY;
     [SerializeField] private float tweenDuration;
     [SerializeField] private CanvasGroup darkPanel;
+    [SerializeField] private GameObject player;
 
 
     public void PauseGame()
@@ -35,8 +36,16 @@ public class PauseMenu : MonoBehaviour
 
     public void ToMainMenu()
     {
+        PlayerPrefs.SetString("lastScene", SceneManager.GetActiveScene().name);
+        Vector2 playerPos = player.transform.position;
+        PlayerPrefs.SetFloat("lastPlayerPosX", playerPos.x);
+        PlayerPrefs.SetFloat("lastPlayerPosY", playerPos.y);
+        PlayerPrefs.SetInt("ShouldContinue", 1); // Penting!
+
         SceneManager.LoadScene("MainMenu");
     }
+
+
 
     private void PausePanelIntro()
     {

@@ -23,6 +23,7 @@ public class Tutorials : MonoBehaviour
         {
             Invoke(nameof(showMoveTutorial), 0.05f);
         }
+        showMoveTutorial();
     }
 
     private void showMoveTutorial()

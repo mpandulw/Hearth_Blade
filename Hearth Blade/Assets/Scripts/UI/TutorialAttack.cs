@@ -17,7 +17,7 @@ public class TutorialAttack : MonoBehaviour
 
     private void showTutorial()
     {
-        if (PlayerPrefs.GetString("checkpoint_tutorial") != "done")
+        if (PlayerPrefs.GetString("attack_tutorial") != "done")
         {
             Time.timeScale = 0;
             darkPanel.DOFade(1, tweenDuration).SetUpdate(true);

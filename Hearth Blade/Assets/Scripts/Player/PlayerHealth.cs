@@ -35,10 +35,20 @@ public class PlayerHealth : MonoBehaviour
 
     void Start()
     {
-        currentHealth = maxHealth;
+        float playerHealthPoint = PlayerPrefs.GetFloat("playerHealthPoint");
+        if (PlayerPrefs.HasKey("playerHealthPoint"))
+        {
+            currentHealth = playerHealthPoint;
+        }
+        else
+        {
+            currentHealth = maxHealth;
+        }
+
         hpBar.maxValue = maxHealth;
         hpBar.value = currentHealth;
 
+        // Cek respawn karena mati
         if (PlayerPrefs.GetInt("ShouldRespawn", 0) == 1)
         {
             Vector2 checkpointPos = new Vector2(
@@ -53,7 +63,19 @@ public class PlayerHealth : MonoBehaviour
 
             PlayerPrefs.SetInt("ShouldRespawn", 0);
         }
+        // Cek continue dari menu utama
+        else if (PlayerPrefs.GetInt("ShouldContinue", 0) == 1)
+        {
+            Vector2 lastPos = new Vector2(
+                PlayerPrefs.GetFloat("lastPlayerPosX"),
+                PlayerPrefs.GetFloat("lastPlayerPosY")
+            );
+
+            transform.position = lastPos;
+            PlayerPrefs.SetInt("ShouldContinue", 0);
+        }
     }
+
 
     // Update is called once per frame
     void Update()

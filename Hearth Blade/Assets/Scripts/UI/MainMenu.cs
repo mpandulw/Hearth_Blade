@@ -44,7 +44,25 @@ public class MainMenu : MonoBehaviour
 
     public void StartButton()
     {
+        if (PlayerPrefs.HasKey("lastScene") &&
+            PlayerPrefs.HasKey("lastPlayerPosX") &&
+            PlayerPrefs.HasKey("lastPlayerPosY"))
+        {
+            PlayerPrefs.SetInt("ShouldContinue", 1); // penting: agar player di scene tahu ini continue
+            SceneManager.LoadScene(PlayerPrefs.GetString("lastScene"));
+        }
+        else
+        {
+            Debug.LogWarning("No saved data. Cannot continue.");
+            // Optional: bisa tampilkan popup ke pemain
+        }
+    }
+
+
+    public void NewGamesButton()
+    {
         SceneManager.LoadScene("Level1");
+        PlayerPrefs.DeleteAll();
     }
 
     public void QuitButton()
