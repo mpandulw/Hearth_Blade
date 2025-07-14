@@ -42,16 +42,33 @@ public class EnemyHealth : MonoBehaviour
     {
         if (isDead) return;
 
-        anim.SetTrigger("hit");
         currentHealth -= damage;
         Debug.Log(currentHealth);
 
         if (enemyMovement != null)
         {
-            enemyMovement.enabled = false; // nonaktifkan movement saat hit
-            Invoke(nameof(EnableMovement), 0.5f); // aktifkan kembali setelah 0.5 detik
+            enemyMovement.enabled = false;
+            Invoke(nameof(EnableMovement), 0.2f); // small pause
+        }
+
+        // If boss, pause animation instead of triggering hit
+        if (isBoss)
+        {
+            StartCoroutine(PauseAnimatorBriefly());
+        }
+        else
+        {
+            anim.SetTrigger("hit");
         }
     }
+
+    private IEnumerator PauseAnimatorBriefly()
+    {
+        anim.speed = 0f;
+        yield return new WaitForSecondsRealtime(0.2f); // Real-time, not affected by Time.timeScale
+        anim.speed = 1f;
+    }
+
 
     private void EnableMovement()
     {
@@ -95,6 +112,7 @@ public class EnemyHealth : MonoBehaviour
         endPanelRect.anchoredPosition = new Vector2(endPanelRect.anchoredPosition.x, topPosY);
         endPanel.SetActive(true);
         PausePanelIntro();
+        BackgroundMusic.instance.PlayWinBGM();
         Time.timeScale = 0;
     }
 

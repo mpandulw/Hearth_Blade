@@ -31,6 +31,7 @@ public class MainMenu : MonoBehaviour
         }
         StartCoroutine(ButtonsIntro());
         Debug.Log("Buttons Length :" + buttons.Length);
+        BackgroundMusic.instance.PlayMainMenuBGM();
     }
 
     void OnDisable()

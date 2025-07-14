@@ -25,21 +25,33 @@ public class DiedMenu : MonoBehaviour
 
     public void Respawn()
     {
+        BackgroundMusic.instance.PlayNormalBGM();
         deadMenu.DOFade(0, fadeDuration);
         deadPanelGameObject.SetActive(false);
 
-        string checkpointScene = PlayerPrefs.GetString("scene");
+        string checkpointScene = PlayerPrefs.GetString("scene", "");
         string currentScene = SceneManager.GetActiveScene().name;
 
-        if (currentScene != checkpointScene)
+        // Case 1: No saved checkpoint
+        if (string.IsNullOrEmpty(checkpointScene))
         {
-            PlayerPrefs.SetInt("ShouldRespawn", 1);
-            SceneManager.LoadScene(PlayerPrefs.GetString("scene"));
+            SceneManager.sceneLoaded += OnSceneLoadedWithoutCheckpoint;
+            SceneManager.LoadScene(currentScene);
             return;
         }
 
+        // Case 2: Checkpoint exists but different scene
+        if (currentScene != checkpointScene)
+        {
+            PlayerPrefs.SetInt("ShouldRespawn", 1);
+            SceneManager.LoadScene(checkpointScene);
+            return;
+        }
+
+        // Case 3: Checkpoint exists and already in same scene
         DoRespawnOnCheckPoint();
     }
+
 
     private void DoRespawnOnCheckPoint()
     {
@@ -53,4 +65,15 @@ public class DiedMenu : MonoBehaviour
         anim.SetBool("isDead", false);
         playerMovements.enabled = true;
     }
+
+    private void OnSceneLoadedWithoutCheckpoint(Scene scene, LoadSceneMode mode)
+    {
+        player.transform.position = startPoint;
+        playerHealth.currentHealth = playerHealth.maxHealth;
+        anim.SetBool("isDead", false);
+        playerMovements.enabled = true;
+
+        SceneManager.sceneLoaded -= OnSceneLoadedWithoutCheckpoint; // Clean up
+    }
+
 }

@@ -97,6 +97,7 @@ public class PlayerHealth : MonoBehaviour
 
     private void Die()
     {
+        BackgroundMusic.instance.PlayLoseBGM();
         deadPanelGameObject.SetActive(true);
         deadPanel.DOFade(1, tweenDuration).SetUpdate(true);
         anim.SetBool("isDead", true);

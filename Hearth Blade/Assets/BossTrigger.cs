@@ -12,6 +12,7 @@ public class BossTrigger : MonoBehaviour
             invisibleWall.SetActive(true);
             var bossMov = boss.GetComponent<EnemyMovements>();
             bossMov.enabled = true;
+            BackgroundMusic.instance.PlayBossBGM();
         }
     }
 }
